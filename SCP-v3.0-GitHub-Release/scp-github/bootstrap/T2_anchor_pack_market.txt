@@ -1,0 +1,140 @@
+## SCP v3.0 — ANCHOR PACK (TIER 2)
+## domain:market | Inject on first use of each shorthand.
+## Load full pack at session start OR inject per-anchor on demand.
+
+---
+
+WAR-ANCHOR {
+  id: "WAR-ANCHOR"
+  shorthand: "[WAR]"
+  expansion: "War/Geopolitical Risk Premium"
+  definition: "The additional risk premium embedded in asset prices due to
+               active or escalating geopolitical conflict, sanctions,
+               or military events."
+  constraints: [
+    "Triggered by: armed conflict, sanctions, territorial disputes",
+    "Affects: commodities (energy/metals), FX (safe-haven flows), equities",
+    "Measured by: VIX spike, gold premium, USD/JPY/CHF movement"
+  ]
+  domain_profiles: {
+    market: "Risk premium visible in commodity spreads and safe-haven demand"
+  }
+  aspect: technical
+  hash: WAR1.0
+  version: 3.0
+  stability: high
+}
+
+---
+
+SH-C-ANCHOR {
+  id: "SH-C-ANCHOR"
+  shorthand: "[SH-C]"
+  expansion: "Short-side Catalyst"
+  definition: "A specific event, data release, or market signal that
+               creates or reinforces a high-conviction short opportunity."
+  constraints: [
+    "Must be specific and time-bounded",
+    "Distinct from sentiment — this is a hard trigger",
+    "Examples: earnings miss, policy reversal, technical breakdown"
+  ]
+  domain_profiles: {
+    market: "Event-driven trigger for initiating or adding to short positions"
+  }
+  aspect: technical
+  hash: SH-C1.0
+  version: 3.0
+  stability: high
+}
+
+---
+
+SH-S-ANCHOR {
+  id: "SH-S-ANCHOR"
+  shorthand: "[SH-S]"
+  expansion: "Short-side Sentiment"
+  definition: "The prevailing bearish bias or negative positioning sentiment
+               in the market, measured by positioning data, surveys,
+               or flow indicators."
+  constraints: [
+    "Sentiment ≠ catalyst — it is the background condition",
+    "Measured by: COT data, put/call ratio, retail sentiment surveys",
+    "Can persist without triggering — needs [SH-C] to activate"
+  ]
+  domain_profiles: {
+    market: "Background bearish condition — predisposes market to downside"
+  }
+  aspect: technical
+  hash: SH-S1.0
+  version: 3.0
+  stability: high
+}
+
+---
+
+LIQ-ANCHOR {
+  id: "LIQ-ANCHOR"
+  shorthand: "[LIQ]"
+  expansion: "Liquidity Conditions"
+  definition: "The current state of market liquidity — the ease with which
+               assets can be bought/sold without significant price impact,
+               and the availability of funding in credit markets."
+  constraints: [
+    "Covers: bid-ask spreads, market depth, repo rates, credit availability",
+    "Tight [LIQ] = amplifies moves, increases volatility",
+    "Loose [LIQ] = suppresses volatility, enables carry/risk-on"
+  ]
+  domain_profiles: {
+    market: "Liquidity as a multiplier on all other market signals"
+  }
+  aspect: technical
+  hash: LIQ1.0
+  version: 3.0
+  stability: high
+}
+
+---
+
+CARRY-ANCHOR {
+  id: "CARRY-ANCHOR"
+  shorthand: "[CARRY]"
+  expansion: "Carry Trade Dynamics"
+  definition: "The behavior of carry trades — borrowing in low-yield
+               currencies/assets to invest in high-yield ones — and the
+               risk of carry unwind events."
+  constraints: [
+    "Key pairs: JPY, CHF (funding) vs EM currencies, AUD, NZD (yield)",
+    "Carry unwind = rapid reversal, sharp safe-haven flow",
+    "Sensitive to: [LIQ] tightening, [WAR] escalation, rate surprises"
+  ]
+  domain_profiles: {
+    market: "Cross-asset dynamic linking FX, rates, and risk appetite"
+  }
+  aspect: technical
+  hash: CARRY1.0
+  version: 3.0
+  stability: high
+}
+
+---
+
+STACK-ANCHOR {
+  id: "STACK-ANCHOR"
+  shorthand: "[STACK]"
+  expansion: "Position Stacking Risk"
+  definition: "The systemic risk that arises when multiple market
+               participants hold correlated positions in the same direction,
+               creating fragility and potential for cascading unwinds."
+  constraints: [
+    "Detected via: COT concentration, options open interest clustering",
+    "High [STACK] = crowded trade = fragile to reversal",
+    "Interacts with [LIQ]: tight liquidity + high stack = violent move"
+  ]
+  domain_profiles: {
+    market: "Crowding risk — systemic fragility from position concentration"
+  }
+  aspect: technical
+  hash: STACK1.0
+  version: 3.0
+  stability: high
+}

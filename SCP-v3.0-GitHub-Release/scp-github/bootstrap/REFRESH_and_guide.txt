@@ -1,0 +1,98 @@
+## SCP v3.0 — SPF::REFRESH + USAGE GUIDE
+## Inject mid-session when drift risk rises or context window is long.
+
+---
+
+## SPF::REFRESH PACKET
+## Paste inline at any point in long session to re-anchor.
+
+SPF::REFRESH {
+  protocol: "SCP v3.0",
+  type: "mid-session-refresh",
+  domain: "market",
+  active_codes: ["[WAR]","[SH-C]","[SH-S]","[LIQ]","[CARRY]","[STACK]"],
+  rules: [
+    "shorthand+domain → fixed meaning always",
+    "flag drift — never silently correct",
+    "output: structured only"
+  ],
+  drift_firewall: "active",
+  instruction: "Re-confirm all active codes against anchors. Continue session."
+}
+
+---
+
+## USAGE GUIDE
+
+### LOADING STRATEGY
+
+| Scenario                  | Load                        | Est. Tokens |
+|---------------------------|-----------------------------|-------------|
+| Single model, new session | T1 + T2 full pack           | ~600        |
+| Same model, continuing    | T1 only                     | ~180        |
+| Cross-model handoff       | T3 SPF packets only         | ~420        |
+| Cold model, no context    | T1 + T3 embedded            | ~600        |
+| Long session (>20 turns)  | Inject SPF::REFRESH         | ~80         |
+| Compliance/audit mode     | T1 + T2 + T3 + SCV layer    | ~900        |
+
+---
+
+### FILE LOADING ORDER
+
+```
+1. T1_system_prompt.txt          → paste as system prompt
+2. T2_anchor_pack_market.txt     → paste after system prompt OR inject on first use
+3. T3_spf_packets_market.txt     → use for cross-model relay or cold start
+4. SPF::REFRESH (inline above)   → paste mid-session as needed
+```
+
+---
+
+### ACCURACY PROTECTION — AGENT BEHAVIOR EXPECTED
+
+| Trigger                    | Expected Agent Response              |
+|----------------------------|--------------------------------------|
+| Unknown shorthand          | [UNKNOWN-CODE] — request definition  |
+| Anchor not loaded          | [ANCHOR-NOT-LOADED] — do not infer   |
+| Ambiguous domain           | Ask: domain? aspect?                 |
+| Expansion varies across    | [DRIFT-DETECTED] — halt + report     |
+| Hash mismatch              | [HASH-CONFLICT] — reject + log       |
+
+---
+
+### EXTENSION POINTS
+
+Add new domain codes using this template:
+
+```
+[CODE] = Full Expansion | domain:X | anchor:CODE-ANCHOR | hash:CODEX.0
+
+CODE-ANCHOR {
+  id: "CODE-ANCHOR"
+  shorthand: "[CODE]"
+  expansion: "Full Expansion"
+  definition: "..."
+  constraints: ["c1","c2","c3"]
+  domain_profiles: { X: "..." }
+  hash: CODEX.0
+  version: 3.0
+  stability: low|medium|high
+}
+```
+
+---
+
+### TOKEN SAVINGS TRACKING
+
+Record at turns 10 / 20 / 30:
+
+| Turn | Tokens Saved | Drift Events | Accuracy |
+|------|-------------|--------------|---------|
+| T10  |             |              |         |
+| T20  |             |              |         |
+| T30  |             |              |         |
+
+Baseline: full expansion of all 6 codes = ~480 tokens per mention
+Compressed: ~30 tokens per mention
+**Savings per mention: ~93%**
+**Net session savings (after bootstrap overhead): ~60-75%**
