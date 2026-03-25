@@ -1,3 +1,5 @@
+ Status: Draft v0.1 — Seeking feedback and validation.
+
 # SCP v3.0 — Semantic Compression Protocol
 
 > **Compress meaning. Prevent drift. Preserve intent across AI models.**
