@@ -1,6 +1,8 @@
-# SCP v3.0 — Full Protocol Specification
+# SCP v3.0 — Protocol Specification (Quick Reference)
 
-`/spec/SPEC.md` | version: 3.0 | status: stable
+`/spec/SPEC.md` — Version 3.0 · March 2026
+
+> **Full technical specification:** [`/spec/SCP_v3_0_Specification.md`](spec/SCP_v3_0_Specification.md)
 
 ---
 
@@ -24,62 +26,35 @@ SCP (Semantic Compression Protocol) defines a standard for:
 | **Drift transparency** | flag drift — never silently correct |
 | **Validation first** | validate before compressing |
 | **Domain isolation** | codes are scoped to domains |
+| **Error transparency** | invalid shorthand must be logged, not inferred |
+| **Meaning preservation** | compression must not alter intent or constraints |
 
 ---
 
 ## 3. Architecture — 4 Layers
 
-### L1 — Compression Layer
-
-Four compression modes:
-
-| Mode | Description | Use Case |
-|---|---|---|
-| **Light** | Minimal shorthand, maximum clarity | Onboarding, first use |
-| **Moderate** | Shorthand + anchors, balanced | Default |
-| **Deep** | Semantic hashes, ultra-compact | Stable long sessions |
-| **Adaptive** | Dynamic — adjusts to ambiguity + drift risk | Recommended |
-
-### L2 — Semantic Layer
-
-- **Semantic Compression Graph (SCG)** — maps all shorthand, anchors, hashes, relationships
-- **Anchors** — canonical definition containers
-- **Drift Firewall** — detects conflict, corruption, contamination
-
-### L3 — Memory Layer
-
-- **Versioning** — all shorthand versioned
-- **Lineage tracking** — evolution of meaning over versions
-- **Hashes** — version-pinned identifiers (e.g. WAR1.0)
-
-### L4 — Interoperability Layer
-
-- **SPF packets** — portable JSON-like semantic units
-- **Multi-model sync** — meaning stable across vendors
-- **Agent compatibility** — agents interpret, validate, relay packets
+```
+L1 — Compression Layer    shorthand modes (light / moderate / deep / adaptive)
+L2 — Semantic Layer       SCG + anchors + drift firewall
+L3 — Memory Layer         versioning + lineage + semantic hashes
+L4 — Interoperability     SPF packets + multi-model + agent compatibility
+```
 
 ---
 
 ## 4. Shorthand Format
 
-```
+```json
 {
-  "id": "<unique-id>",
-  "type": "shorthand",
-  "label": "[CODE]",
+  "code": "[CODE]",
   "expansion": "Full human-readable meaning",
-  "domain": ["domain1", "domain2"],
+  "domain": "active-domain",
   "anchor": "CODE-ANCHOR",
   "version": "3.0",
   "hash": "CODE1.0",
   "metadata": {
     "created": "v3.0",
-    "stability": "low|medium|high",
-    "validation": {
-      "status": "valid|invalid|fallback",
-      "confidence": "low|medium|high",
-      "last_checked": "YYYY-MM-DD"
-    }
+    "stability": "low|medium|high"
   }
 }
 ```
@@ -88,7 +63,7 @@ Four compression modes:
 
 ## 5. Anchor Format
 
-```
+```json
 {
   "id": "CODE-ANCHOR",
   "type": "anchor",
@@ -97,8 +72,7 @@ Four compression modes:
   "constraints": ["constraint 1", "constraint 2", "constraint 3"],
   "goals": ["goal 1", "goal 2"],
   "domain_profiles": {
-    "domain1": "domain-specific expansion",
-    "domain2": "domain-specific expansion"
+    "domain1": "domain-specific expansion"
   },
   "versions": ["CODE1.0"],
   "links": ["RELATED-ANCHOR"],
@@ -114,41 +88,28 @@ Four compression modes:
 ## 6. SPF Packet Format
 
 ```json
-{
-  "type": "shorthand",
+SPF {
   "code": "[CODE]",
   "expansion": "Full expansion text",
-  "version": "3.0",
+  "domain": "domain",
   "anchor": "CODE-ANCHOR",
-  "domain": ["domain1"],
   "hash": "CODE1.0",
-  "metadata": {
-    "created": "v3.0",
-    "stability": "high",
-    "validation": {
-      "status": "valid",
-      "confidence": "high",
-      "last_checked": "YYYY-MM-DD"
-    }
-  }
+  "version": "3.0",
+  "constraints": ["c1", "c2"],
+  "metadata": { "stability": "high" }
 }
 ```
 
 ---
 
-## 7. Bootstrap Structure
+## 7. Bootstrap Tiers
 
-### Tier 1 — Nano System Prompt (~180 tokens)
-Always load. Contains: role + rules + locked codes.
-
-### Tier 2 — Anchor Pack (~100 tokens per anchor)
-Load at session start or on-demand per shorthand.
-
-### Tier 3 — SPF Packets (~70 tokens per packet)
-Use for cross-model handoff or cold-start context.
-
-### SPF::REFRESH (~80 tokens)
-Inject mid-session every ~50 turns to re-anchor.
+| Tier | Purpose | Tokens |
+|---|---|---|
+| **T1** — Nano System Prompt | Always load. Role + rules + locked codes | ~180 |
+| **T2** — Anchor Pack | Load at session start. Full anchor definitions | ~420 |
+| **T3** — SPF Packets | Cross-model handoff or cold-start context | ~420 |
+| **SPF::REFRESH** | Mid-session re-anchor (every ~20+ turns) | ~80 |
 
 ---
 
@@ -188,33 +149,42 @@ Inject mid-session every ~50 turns to re-anchor.
 
 ---
 
-## 11. SCV Extension (Optional)
+## 11. Domain Status
 
-SCV adds validation intelligence on top of SCP:
-
-- Validation status per shorthand (valid/invalid/fallback)
-- Confidence scoring (low/medium/high)
-- Validation lineage tracking
-- Enterprise compliance metadata
-
-See `/spec/SCV-Extension.md` for full SCV specification.
+| Domain | State | Codes |
+|---|---|---|
+| `market` | Locked | `[WAR]` `[SH-C]` `[SH-S]` `[LIQ]` `[CARRY]` `[STACK]` |
+| `education` | Active | `TA bot`, `ALUMNI` |
+| `blockchain` | Pending | — |
+| `scp_meta` | Pending | — |
 
 ---
 
-## 12. Domain Profiles
+## 12. Roadmap
 
-Domains scope shorthand meaning:
+| Version | Focus | Status |
+|---|---|---|
+| **v3.0** | Core protocol | ✅ Stable |
+| **v3.1** | SCV validation extension | 🔄 In progress |
+| **v3.2** | SCP Router (FastAPI middleware) | 🔄 In progress |
+| **v3.3** | Blockchain integration | ⏳ Planned |
+| **v4.0** | Semantic Router infrastructure | ⏳ Planned |
+| **v5.0+** | Semantic Network Layer | ⏳ Deferred |
 
-| Domain | Description |
+---
+
+## Related Documents
+
+| Document | Path |
 |---|---|
-| `market` | Financial markets, trading, macro |
-| `technical` | Software, architecture, engineering |
-| `education` | Learning, teaching, institutional |
-| `msme` | Small/medium business contexts |
-| `community` | Social, collaborative, network |
-| `scp_meta` | SCP protocol itself |
+| **Full Technical Specification** | [`/spec/SCP_v3_0_Specification.md`](SCP_v3_0_Specification.md) |
+| **SPF Packet Format** | [`/spec/SPF-Packet-Format.md`](SPF-Packet-Format.md) |
+| **Semantic Graph Schema** | [`/spec/Semantic-Graph-Schema.json`](Semantic-Graph-Schema_json.md) |
+| **SCV Validation Extension** | [`/spec/SCV-Extension.md`](SCV-Extension.md) |
+| **Token Economics** | [`/docs/TOKENOMICS.md`](../docs/TOKENOMICS.md) |
+| **Vision Document** | [`/VISION.md`](../VISION.md) |
+| **Contributing Guide** | [`/CONTRIBUTING.md`](../CONTRIBUTING.md) |
 
 ---
 
-*Full schema: `/spec/Semantic-Graph-Schema.json`*
-*SPF format: `/spec/SPF-Packet-Format.md`*
+*SCP v3.0 — github.com/yahyaedhie/scp — Apache 2.0*

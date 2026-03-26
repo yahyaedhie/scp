@@ -276,19 +276,20 @@ This mirrors human cognition: the brain reasons, the library stores knowledge, t
 
 |Component|Status|
 |---|---|
-|Core design|✅ Verified|
+|Core protocol specification|✅ v3.0 stable|
 |Protocol specification|✅ v3.0|
 |SPF packet format|✅ Stable|
 |Semantic graph schema|✅ Stable|
 |Entity model|✅ Designed|
 |Memory bank architecture|✅ Designed|
 |Concept detection (dual-path)|✅ Designed|
-|domain:market (6 locked codes)|✅ Implemented|
-|domain:education|⏳ Planned|
-|domain:blockchain|⏳ Planned|
-|Router implementation|🔄 In progress|
+|domain:market (6 locked codes)|✅ Locked|
+|domain:education|🔄 Active|
+|domain:blockchain|⏳ Pending|
+|domain:scp_meta|⏳ Pending|
+|SCV validation extension|🔄 In progress|
+|SCP Router v3.2 (FastAPI)|🔄 In progress|
 |Benchmark suite|🔄 Methodology designed|
-|SCV validation extension|⏳ Planned|
 
 ---
 
@@ -296,11 +297,13 @@ This mirrors human cognition: the brain reasons, the library stores knowledge, t
 
 |Version|Focus|Status|
 |---|---|---|
-|**v3.0**|Core protocol — design verified, behavioral implementation|✅ Current|
-|**v3.1**|SCV validation extension|Planned|
-|**v3.2**|Infrastructure middleware — router with memory|In progress|
-|**v4.0**|Semantic router — full external anchor resolution at scale|Vision|
-|**v5.0**|Semantic network layer — multi-router, multi-agent mesh|Vision|
+|**v3.0**|Core protocol — compression, SCG, DFW, SPF, bootstrap|✅ Stable|
+|**v3.1**|SCV validation extension — confidence scoring, compliance metadata|🔄 In progress|
+|**v3.2**|SCP Router — FastAPI middleware, anchor resolution, token metering, drift firewall|🔄 In progress|
+|**v3.3**|Blockchain integration — on-chain anchor registry, SPF notarization|⏳ Planned|
+|**v4.0**|Semantic Router — centralized anchor store, session-independent meaning, algorithmic DFW|⏳ Planned|
+|**v4.0+**|Domain marketplace, utility token, cross-platform anchor resolution|⏳ Planned|
+|**v5.0+**|Semantic Network Layer — SAF addressing, ADP discovery, multicast (requires multi-node network)|⏳ Deferred|
 
 ---
 
@@ -314,10 +317,11 @@ scp/
 ├── VISION.md                           ← the deeper case for semantic infrastructure
 │
 ├── spec/
-│   ├── SCP_v3_0_Design.md              ← full design document (verified)
+│   ├── SCP_v3_0_Specification.md       ← full technical specification
+│   ├── SPEC.md                         ← quick reference specification
 │   ├── SPF-Packet-Format.md            ← semantic packet format
-│   ├── Semantic-Graph-Schema.json       ← SCG schema
-│   └── SCV-Extension.md                ← validation layer (optional)
+│   ├── Semantic-Graph-Schema.json      ← SCG schema
+│   └── SCV-Extension.md               ← validation layer (optional)
 │
 ├── dictionary/
 │   ├── shorthand.json                  ← shorthand registry

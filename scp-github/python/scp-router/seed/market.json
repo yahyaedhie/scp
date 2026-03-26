@@ -1,0 +1,84 @@
+{
+  "domain": "market",
+  "version": "3.0",
+  "anchors": [
+    {
+      "id": "WAR-ANCHOR",
+      "shorthand": "[WAR]",
+      "expansion": "War/Geopolitical Risk Premium",
+      "definition": "The additional risk premium embedded in asset prices due to active or escalating geopolitical conflict, sanctions, or military events.",
+      "constraints": ["armed conflict", "sanctions", "supply disruption"],
+      "domain": "market",
+      "domain_profile": "Risk premium visible in commodity spreads and safe-haven demand",
+      "aspect": "technical",
+      "hash": "WAR1.0",
+      "version": "3.0",
+      "stability": "high"
+    },
+    {
+      "id": "SH-C-ANCHOR",
+      "shorthand": "[SH-C]",
+      "expansion": "Short-side Catalyst",
+      "definition": "A specific event, data release, or market signal that creates or reinforces a high-conviction short opportunity. Hard trigger, time-bounded.",
+      "constraints": ["event-driven", "time-bounded", "hard trigger not sentiment"],
+      "domain": "market",
+      "domain_profile": "Event-driven trigger for initiating or adding to short positions",
+      "aspect": "technical",
+      "hash": "SH-C1.0",
+      "version": "3.0",
+      "stability": "high"
+    },
+    {
+      "id": "SH-S-ANCHOR",
+      "shorthand": "[SH-S]",
+      "expansion": "Short-side Sentiment",
+      "definition": "The prevailing bearish positioning bias in the market. Background condition, not a trigger. Requires [SH-C] to activate.",
+      "constraints": ["COT data", "put/call ratio", "retail sentiment surveys"],
+      "domain": "market",
+      "domain_profile": "Background bearish condition — predisposes market to downside",
+      "aspect": "technical",
+      "hash": "SH-S1.0",
+      "version": "3.0",
+      "stability": "high"
+    },
+    {
+      "id": "LIQ-ANCHOR",
+      "shorthand": "[LIQ]",
+      "expansion": "Liquidity Conditions",
+      "definition": "Current state of market liquidity and funding availability. Acts as multiplier on all other market signals.",
+      "constraints": ["bid-ask spreads", "market depth", "repo/credit availability"],
+      "domain": "market",
+      "domain_profile": "Liquidity as amplifier/suppressor of market moves",
+      "aspect": "technical",
+      "hash": "LIQ1.0",
+      "version": "3.0",
+      "stability": "high"
+    },
+    {
+      "id": "CARRY-ANCHOR",
+      "shorthand": "[CARRY]",
+      "expansion": "Carry Trade Dynamics",
+      "definition": "Borrow low-yield (JPY/CHF) to invest high-yield (EM/AUD). Sensitive to [LIQ] and [WAR]. Unwind = sharp reversal.",
+      "constraints": ["JPY/CHF funding", "EM/AUD yield", "unwind cascade risk"],
+      "domain": "market",
+      "domain_profile": "Cross-asset FX+rates+risk-appetite dynamic",
+      "aspect": "technical",
+      "hash": "CARRY1.0",
+      "version": "3.0",
+      "stability": "high"
+    },
+    {
+      "id": "STACK-ANCHOR",
+      "shorthand": "[STACK]",
+      "expansion": "Position Stacking Risk",
+      "definition": "Systemic fragility from correlated position concentration. High [STACK] + tight [LIQ] = violent unwind risk.",
+      "constraints": ["COT concentration", "options clustering", "crowded trade"],
+      "domain": "market",
+      "domain_profile": "Crowding risk — systemic fragility from position concentration",
+      "aspect": "technical",
+      "hash": "STACK1.0",
+      "version": "3.0",
+      "stability": "high"
+    }
+  ]
+}
