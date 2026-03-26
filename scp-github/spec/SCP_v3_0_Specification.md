@@ -2,7 +2,7 @@
 
 ### _Full Protocol Specification_
 
-`/spec/SCP-v3.0-Spec.md` — Version 3.0 · March 2026
+`/spec/SCP_v3_0_Specification.md` — Version 3.0 · March 2026
 
 ---
 
@@ -183,7 +183,7 @@ Domains scope shorthand meaning. The same code can have different expansions in 
 **Domain structure:**
 
 ```
-domain:<name>
+domain:<n>/
   ├── shorthand.json       codes scoped to this domain
   └── anchors/             anchor definitions for this domain
       ├── CODE1-ANCHOR.json
@@ -295,6 +295,7 @@ SPF {
 ```
 
 **Required fields:** `code`, `expansion`, `domain`, `anchor`, `hash`, `version`
+
 **Optional fields:** `constraints`, `domain_profile`, `metadata`, `validation`
 
 Full SPF specification: see `/spec/SPF-Packet-Format.md`
@@ -361,11 +362,11 @@ SPF::REFRESH                   ~80 tokens   mid-session re-anchor
 
 SCP-compliant agents must:
 
-1. Interpret shorthand codes deterministically
-2. Validate anchors before expansion
-3. Reject corrupted or unresolvable packets
-4. Log drift events with `[DRIFT-DETECTED]`
-5. Never silently correct — always flag
+1. Interpret shorthand codes deterministically.
+2. Validate anchors before expansion.
+3. Reject corrupted or unresolvable packets.
+4. Log drift events with `[DRIFT-DETECTED]`.
+5. Never silently correct — always flag.
 
 **Agent error codes:**
 
@@ -424,7 +425,7 @@ Without compression, a 100-turn session sends ~20,000 input tokens per turn — 
 
 | Metric | Value |
 |---|---|
-| Token reduction per mention | ~60–80% |
+| Token reduction per mention | ~60-80% |
 | Bootstrap overhead (one-time) | ~600 tokens |
 | Break-even point | ~Turn 5 |
 | Long session savings (Turn 50+) | Compounds significantly |
@@ -432,7 +433,7 @@ Without compression, a 100-turn session sends ~20,000 input tokens per turn — 
 | Full expansion per mention (baseline) | ~480 tokens |
 | Compressed per mention | ~30 tokens |
 | Savings per mention | ~93% |
-| Net session savings (after bootstrap) | ~60–75% |
+| Net session savings (after bootstrap) | ~60-75% |
 
 ### 9.3 Session Architecture
 
@@ -441,8 +442,8 @@ WRONG:
   One session → run until context ceiling → accuracy degrades → restart
 
 RIGHT:
-  Session 1 (turns 1–50) → export SPF packets
-  Session 2 (turns 1–50) → load [INIT] + inject SPF packets
+  Session 1 (turns 1-50) → export SPF packets
+  Session 2 (turns 1-50) → load [INIT] + inject SPF packets
   Session N → continue with full meaning, zero token debt
 ```
 
@@ -453,8 +454,8 @@ SPF packets are the memory bridge between sessions. The bootstrap is the protoco
 Every token processed is GPU compute. Every redundant token is wasted energy.
 
 ```
-Without SCP: full prose history × every turn × millions of users = planetary-scale inference waste
-With SCP:    compressed history × every turn × same scale = 60–80% less redundant computation
+Without SCP: full prose history x every turn x millions of users = planetary-scale inference waste
+With SCP:    compressed history x every turn x same scale = 60-80% less redundant computation
 ```
 
 SCP addresses inference energy at the protocol level — before the hardware, before the model.
@@ -525,10 +526,10 @@ SCV (Smart Compression & Validation) adds a validation layer on top of SCP for e
 
 **SCV rules:**
 
-- Compression cannot proceed without validation
-- Drift firewall events trigger validation reports
-- Confidence scores determine compression aggressiveness
-- Validation lineage is maintained for audit
+- Compression cannot proceed without validation.
+- Drift firewall events trigger validation reports.
+- Confidence scores determine compression aggressiveness.
+- Validation lineage is maintained for audit.
 
 SCV is optional. SCP operates fully without it. Enable SCV when compliance, audit trails, or enterprise trust is required.
 
@@ -558,7 +559,7 @@ Full SCV specification: see `/spec/SCV-Extension.md`
 [ ] Adaptive compression enabled
 [ ] SPF packets supported for cross-model handoff
 [ ] Bootstrap tiers implemented (T1 + T2 + T3 + REFRESH)
-[ ] Agent error codes implemented ([UNKNOWN-CODE], [ANCHOR-NOT-LOADED], [DRIFT-DETECTED], [HASH-CONFLICT])
+[ ] Agent error codes implemented
 [ ] Domain isolation verified — codes do not bleed across domains
 [ ] Versioning and lineage tracking active
 [ ] Stability ratings assigned to all anchors
@@ -585,16 +586,19 @@ Full SCV specification: see `/spec/SCV-Extension.md`
 ```
 scp/
 ├── README.md                         project overview + quick start
-├── SPEC.md                           this document — full protocol specification
+├── SPEC.md                           protocol specification (quick reference)
 ├── LICENSE                           Apache 2.0
 ├── CONTRIBUTING.md                   how to extend SCP
 ├── VISION.md                         architectural vision document
-├── TOKENOMICS.md                     LLM token economics explanation
 │
 ├── spec/
+│   ├── SCP_v3_0_Specification.md     ← this document — full technical specification
 │   ├── SPF-Packet-Format.md          semantic packet format
 │   ├── Semantic-Graph-Schema.json    SCG schema
 │   └── SCV-Extension.md             validation layer (optional)
+│
+├── docs/
+│   └── TOKENOMICS.md                LLM token economics explanation
 │
 ├── dictionary/
 │   ├── shorthand.json                shorthand registry
