@@ -1,0 +1,4 @@
+dockerfile.txt
+tests
+.env
+__pycache__

@@ -48,6 +48,14 @@ curl -X POST http://localhost:8000/resolve/ \
   -d '{"code": "[WAR]", "domain": "market"}'
 ```
 
+```CMD
+
+curl -X POST http://localhost:8000/proxy/chat ^
+  -H "Content-Type: application/json" ^
+  -d "{\"message\":\"[WAR] elevated → [LIQ] impact on [CARRY]?\",\"domain\":\"market\"}"
+
+```
+
 ### Chat through SCP proxy
 ```bash
 curl -X POST http://localhost:8000/proxy/chat \
@@ -66,6 +74,13 @@ curl -X POST http://localhost:8000/proxy/chat/dry-run \
     "message": "[WAR] elevated → [LIQ] impact on [CARRY]?",
     "domain": "market"
   }'
+```
+
+```CMD
+curl -X POST http://localhost:8000/proxy/chat/dry-run ^
+  -H "Content-Type: application/json" ^
+  -d "{\"message\":\"[WAR] elevated → [LIQ] impact on [CARRY]?\",\"domain\":\"market\"}"
+
 ```
 
 ### Export SPF for cross-model handoff
