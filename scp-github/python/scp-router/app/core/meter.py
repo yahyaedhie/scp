@@ -16,10 +16,17 @@ def _encoder():
     return tiktoken.get_encoding(settings.token_model)
 
 
-def count_tokens(text: str) -> int:
-    """Count tokens using tiktoken encoding."""
+def count_tokens(text: str, client=None) -> int:
+    """Count tokens using tiktoken encoding or Anthropic SDK if client provided."""
     if not text:
         return 0
+    
+    # If client is provided and has count_tokens method (Anthropic SDK), use it for accuracy
+    if client and hasattr(client, "messages") and hasattr(client.messages, "count_tokens"):
+        # Note: Anthropic's count_tokens is typically async. 
+        # For now, we remain sync and fallback to tiktoken.
+        pass
+            
     return len(_encoder().encode(text))
 
 

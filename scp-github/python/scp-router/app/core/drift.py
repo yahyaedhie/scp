@@ -8,6 +8,7 @@ Checks:
   4. Unknown codes in output
 """
 
+import re
 from dataclasses import dataclass
 from app.core.resolver import extract_codes, resolve_code
 
@@ -59,24 +60,30 @@ async def check_drift(text: str, domain: str = "market") -> list[DriftEvent]:
             context_end = min(len(text), idx + 200)
             context = text[context_start:context_end].lower()
 
-            # Check if any constraint keywords appear in wrong context
-            # This is a basic heuristic — production would use embedding similarity
+            # Check if any constraint keywords appear in context
             if anchor.constraints:
+                # Tokenize constraints and context for better matching
                 constraint_words = set()
                 for c in anchor.constraints:
-                    constraint_words.update(c.lower().split())
+                    # Split by non-alphanumeric and keep meaningful words
+                    constraint_words.update(re.findall(r'\w+', c.lower()))
+                
+                # Filter out very short words (stop words approximation)
+                constraint_words = {w for w in constraint_words if len(w) > 3}
 
-                # If code is mentioned but none of the constraint context appears,
-                # it might be used in wrong context
-                context_words = set(context.split())
+                context_words = set(re.findall(r'\w+', context))
                 overlap = constraint_words & context_words
+                
+                # If code is mentioned but none of the constraint context appears,
+                # it might be used in wrong context.
+                # Threshold: at least 1 meaningful keyword should overlap
                 if len(overlap) == 0 and len(constraint_words) > 0:
                     events.append(
                         DriftEvent(
                             code=f"[{code}]",
                             event_type="expansion_drift",
                             detail=f"[{code}] used without constraint context. "
-                            f"Expected context: {anchor.constraints[:3]}",
+                            f"Expected keywords from: {anchor.constraints[:2]}",
                             severity="warning",
                         )
                     )
@@ -101,3 +108,23 @@ async def validate_response(
         status = "clean"
 
     return status, events
+
+
+def calculate_tri(events: list[DriftEvent], total_codes: int) -> float:
+    """Calculate Task Reliability Index (TRI).
+    
+    Formula: 1.0 - (penalty_sum / total_codes)
+    Penalties: error=0.15, warning=0.05
+    """
+    if total_codes <= 0:
+        return 1.0
+    
+    penalty = 0.0
+    for e in events:
+        if e.severity == "error":
+            penalty += 0.15
+        else:
+            penalty += 0.05
+            
+    tri = 1.0 - (penalty / total_codes)
+    return max(0.0, min(1.0, round(tri, 2)))

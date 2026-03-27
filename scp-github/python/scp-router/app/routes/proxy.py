@@ -10,8 +10,8 @@ from anthropic import AsyncAnthropic
 from app.config import settings
 from app.models.session import ProxyRequest, ProxyResponse
 from app.store.session_store import get_or_create_session, update_session
-from app.core.resolver import build_system_prompt, extract_codes
-from app.core.drift import validate_response
+from app.core.resolver import build_system_prompt, extract_codes, handle_commands
+from app.core.drift import validate_response, calculate_tri
 from app.core.meter import count_tokens
 
 router = APIRouter(prefix="/proxy", tags=["proxy"])
@@ -31,8 +31,20 @@ async def proxy_chat(req: ProxyRequest):
     """Route user message through SCP compression layer to Claude."""
 
     # 1. Get or create session
-    session = get_or_create_session(req.session_id, req.domain)
+    session = await get_or_create_session(req.session_id, req.domain)
     session.turn_count += 1
+
+    # 1.5 Handle Commands (SHOW STATS, SPF::CHARTER, etc.)
+    cmd_results = await handle_commands(req.message, req.domain)
+    if cmd_results["intercept_response"]:
+        return ProxyResponse(
+            session_id=session.session_id,
+            response=cmd_results["intercept_response"],
+            turn=session.turn_count,
+            tokens_input=0,
+            tokens_output=0,
+            tokens_saved_estimate=0,
+        )
 
     # 2. Build SCP system prompt (T1 + T2)
     system_prompt = ""
@@ -79,13 +91,40 @@ async def proxy_chat(req: ProxyRequest):
     # 9. Drift firewall check
     drift_status, drift_events = await validate_response(response_text, req.domain)
 
+    # 9.5 Calculate TRI and CQS
+    total_codes = len(codes_in_message)
+    tri = calculate_tri(drift_events, total_codes)
+    
+    # Simple CQS: (savings_ratio + tri) / 2
+    savings_ratio = (baseline_extra / max(1, input_tokens + baseline_extra))
+    cqs = round((tri + savings_ratio) / 2, 2)
+
+    # 9.6 Governance Thresholds (SCP v3.0.2)
+    from app.core.drift import DriftEvent
+    thresholds = settings.get_thresholds(req.domain)
+    
+    if tri < thresholds["tri"]:
+        drift_events.append(DriftEvent(
+            code="SYSTEM", event_type="low_tri", 
+            detail=f"[LOW-TRI] Reliability fell below {thresholds['tri']} threshold for domain:{req.domain}", 
+            severity="warning"
+        ))
+    if cqs < thresholds["cqs"]:
+        drift_events.append(DriftEvent(
+            code="SYSTEM", event_type="low_cqs", 
+            detail=f"[LOW-CQS] Compression balance fell below {thresholds['cqs']} threshold for domain:{req.domain}", 
+            severity="warning"
+        ))
+
     # 10. Update session metrics
     session.tokens_input += input_tokens
     session.tokens_output += output_tokens
     session.tokens_saved += baseline_extra
+    session.tri = tri
+    session.cqs = cqs
     if drift_events:
         session.drift_events.extend([e.to_dict() for e in drift_events])
-    update_session(session)
+    await update_session(session)
 
     # 11. Build response
     return ProxyResponse(
@@ -97,6 +136,8 @@ async def proxy_chat(req: ProxyRequest):
         tokens_saved_estimate=baseline_extra,
         drift_events=[e.to_dict() for e in drift_events],
         active_codes=session.active_codes,
+        tri=tri,
+        cqs=cqs,
     )
 
 

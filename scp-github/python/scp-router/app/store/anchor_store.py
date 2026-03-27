@@ -71,22 +71,22 @@ async def upsert_anchor(anchor: Anchor):
 
 def _row_to_anchor(row: aiosqlite.Row) -> Anchor:
     return Anchor(
-        id=row[0],
-        shorthand=row[1],
-        expansion=row[2],
-        definition=row[3],
-        constraints=json.loads(row[4]),
-        domain=row[5],
-        domain_profile=row[6],
-        aspect=row[7],
-        hash=row[8],
-        version=row[9],
+        id=row["id"],
+        shorthand=row["shorthand"],
+        expansion=row["expansion"],
+        definition=row["definition"],
+        constraints=json.loads(row["constraints"]),
+        domain=row["domain"],
+        domain_profile=row["domain_profile"],
+        aspect=row["aspect"],
+        hash=row["hash"],
+        version=row["version"],
         metadata=AnchorMetadata(
-            stability=row[10],
+            stability=row["stability"],
             validation=Validation(
-                status=row[11],
-                confidence=row[12],
-                last_checked=row[13],
+                status=row["validation_status"],
+                confidence=row["validation_confidence"],
+                last_checked=row["validation_last_checked"],
             ),
         ),
     )
@@ -94,6 +94,7 @@ def _row_to_anchor(row: aiosqlite.Row) -> Anchor:
 
 async def get_anchor_by_id(anchor_id: str) -> Anchor | None:
     async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
         cursor = await db.execute("SELECT * FROM anchors WHERE id = ?", (anchor_id,))
         row = await cursor.fetchone()
         return _row_to_anchor(row) if row else None
@@ -106,6 +107,7 @@ async def resolve_code(code: str, domain: str = "market") -> Anchor | None:
         normalized = f"[{normalized}]"
 
     async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             "SELECT * FROM anchors WHERE shorthand = ? AND domain = ?",
             (normalized, domain),
@@ -116,6 +118,7 @@ async def resolve_code(code: str, domain: str = "market") -> Anchor | None:
 
 async def get_all_anchors(domain: str | None = None) -> list[Anchor]:
     async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
         if domain:
             cursor = await db.execute(
                 "SELECT * FROM anchors WHERE domain = ?", (domain,)
@@ -130,4 +133,4 @@ async def delete_anchor(anchor_id: str) -> bool:
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute("DELETE FROM anchors WHERE id = ?", (anchor_id,))
         await db.commit()
-        return cursor.rowcount > 0
+        return cursor.rowcount > 0

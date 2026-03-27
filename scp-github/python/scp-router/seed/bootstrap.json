@@ -1,0 +1,59 @@
+{
+  "domain": "market",
+  "anchors": [
+    {
+      "id": "WAR",
+      "shorthand": "[WAR]",
+      "expansion": "War/Geopolitical Risk Premium",
+      "definition": "The additional yield or risk compensation required for geopolitical instability.",
+      "constraints": ["conflict", "risk", "premium", "geopolitical"],
+      "hash": "b1",
+      "version": "3.0.2"
+    },
+    {
+      "id": "SH-C",
+      "shorthand": "[SH-C]",
+      "expansion": "Short-side Catalyst",
+      "definition": "Event or data point triggering a downward price move.",
+      "constraints": ["catalyst", "short", "trigger", "downward"],
+      "hash": "b2",
+      "version": "3.0.2"
+    },
+    {
+      "id": "SH-S",
+      "shorthand": "[SH-S]",
+      "expansion": "Short-side Sentiment",
+      "definition": "Bearish market positioning or psychological state.",
+      "constraints": ["sentiment", "short", "bearish", "positioning"],
+      "hash": "b3",
+      "version": "3.0.2"
+    },
+    {
+      "id": "LIQ",
+      "shorthand": "[LIQ]",
+      "expansion": "Liquidity Conditions",
+      "definition": "Availability of funding and market depth for execution.",
+      "constraints": ["liquidity", "funding", "depth", "market"],
+      "hash": "b4",
+      "version": "3.0.2"
+    },
+    {
+      "id": "CARRY",
+      "shorthand": "[CARRY]",
+      "expansion": "Carry Trade Dynamics",
+      "definition": "Flows driven by interest rate differentials between currencies.",
+      "constraints": ["carry", "interest", "differential", "currency"],
+      "hash": "b5",
+      "version": "3.0.2"
+    },
+    {
+      "id": "STACK",
+      "shorthand": "[STACK]",
+      "expansion": "Position Stacking Risk",
+      "definition": "Concentration risk from multiple identical positions across participants.",
+      "constraints": ["stacking", "risk", "concentration", "position"],
+      "hash": "b6",
+      "version": "3.0.2"
+    }
+  ]
+}

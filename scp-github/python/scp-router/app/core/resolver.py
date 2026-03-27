@@ -66,6 +66,7 @@ async def expand_text(text: str, domain: str = "market") -> str:
 
 async def build_system_prompt(domain: str = "market") -> str:
     """Build T1+T2 system prompt from stored anchors."""
+    from app.config import settings
     anchors = await get_all_anchors(domain)
 
     # T1 — Nano system prompt
@@ -73,23 +74,12 @@ async def build_system_prompt(domain: str = "market") -> str:
         f"{a.shorthand} = {a.expansion}" for a in anchors
     )
 
-    t1 = f"""ROLE: You are an SCP v3.0 compliant agent.
+    t1 = f"""ROLE: You are an SCP v{settings.scp_version} compliant agent.
 Expand shorthand using anchors and domain context.
-Output: structured only — tables/lists, no prose preamble.
-
-RULES:
-- shorthand + domain → fixed meaning, always deterministic
-- every shorthand must link to its anchor before expansion
-- flag drift immediately — never silently correct
-- validate before compressing or expanding
-- if anchor not loaded → output [ANCHOR-NOT-LOADED], do not infer
-- if shorthand unknown → output [UNKNOWN-CODE], request definition
-- if expansion ambiguous → ask: domain? aspect?
-- domain:{domain} is active unless stated otherwise
-
-COMPRESSION: adaptive | DRIFT-FIREWALL: active | VERSION: SCP v3.0
-
-DOMAIN:{domain.upper()} — LOCKED CODES:
+Protocol Version: SCP v{settings.scp_version}  
+Activation Mode: {settings.compression_mode.upper()} (anchors + shorthand codes)  
+Session ID: [Auto‑Generate]  
+COMPRESSION: {settings.compression_mode.upper()} | DRIFT-FIREWALL: active | VERSION: SCP v{settings.scp_version}
 {codes_block}"""
 
     # T2 — Anchor pack
@@ -110,3 +100,36 @@ DOMAIN:{domain.upper()} — LOCKED CODES:
     t2 = "\n\n".join(anchor_blocks)
 
     return f"{t1}\n\n# ANCHOR PACK\n\n{t2}"
+
+
+def get_charter() -> str:
+    """Return the formal SCP v3.0.2 Charter Statement."""
+    return (
+        "Under SCP v3.0.2, AI interaction shifts from short, token‑limited chats to long, "
+        "coherent, auditable collaborations. Responses must embody continuity, efficiency, "
+        "transparency, and empowerment."
+    )
+
+
+async def handle_commands(message: str, domain: str = "market") -> dict:
+    """Parse and handle SPF commands in user message.
+    Returns a dict with modifications to session or special responses.
+    """
+    cmd_results = {
+        "show_stats": None,
+        "intercept_response": None,
+        "refresh_needed": False
+    }
+
+    if "SHOW STATS" in message.upper():
+        cmd_results["show_stats"] = True
+    elif "HIDE STATS" in message.upper():
+        cmd_results["show_stats"] = False
+    
+    if "SPF::REFRESH" in message.upper():
+        cmd_results["refresh_needed"] = True
+        
+    if "SPF::CHARTER" in message.upper():
+        cmd_results["intercept_response"] = f"# 📜 SCP v3.0.2 Charter\n\n> {get_charter()}"
+
+    return cmd_results

@@ -171,3 +171,73 @@ SPF::REFRESH {
 # Savings per mention         → ~93%
 # Net session savings         → ~60-75% (after bootstrap)
 # ============================================================
+
+# ============================================================
+# TIER 4 — EVALUATION LAYER (TRI & CQS) [OPTIONAL — LOAD FOR AUDITABILITY]
+# ============================================================
+
+## TRI & CQS — Semantic Validation Metrics (SCP v3.0 Extension)
+
+**Purpose**: Provide standardized, quantifiable scoring for semantic fidelity and compression efficiency.  
+**Load Condition**: Optional. Recommended for governance, long sessions, or cross-model validation.  
+**Token Cost**: ~280 tokens when fully loaded.
+
+### Definitions
+- **TRI (Task Reliability Index)**: Measures how well compressed output preserves the *intended meaning* of the original input. Scale: 0.0–1.0 (higher = better fidelity).
+- **CQS (Compression Quality Score)**: Balances token savings against accuracy. Scale: 0.0–1.0 (higher = better trade-off).
+
+**Interpretation Guidelines**:
+- TRI ≥ 0.90 → High reliability (governance-ready)
+- TRI 0.70–0.89 → Acceptable (review recommended)
+- TRI < 0.70 → Drift risk — flag [LOW-TRI]
+- CQS ≥ 0.85 → Strong efficiency + fidelity balance
+- CQS 0.70–0.84 → Moderate (acceptable for most sessions)
+- CQS < 0.70 → Aggressive compression — flag [LOW-CQS]
+
+### CQS Calculation Formula
+\[
+CQS = \frac{\text{Token Savings Percentage} + \text{TRI}}{2}
+\]
+(Adjust weighting per modality if needed: text, image, video)
+
+### Evaluation Procedure (Router / Agent Steps)
+1. Identify active anchors used in the response.
+2. Compare original intent vs. compressed/expanded output.
+3. Assign TRI based on semantic fidelity.
+4. Compute CQS using the formula above.
+5. Log results with anchor references and hash checks.
+6. Apply action rubric below.
+
+### Action Rubric
+
+| TRI Range     | CQS Range     | Recommended Action                  | Error Flag (if any) |
+|---------------|---------------|-------------------------------------|---------------------|
+| ≥ 0.90        | ≥ 0.85        | Approve — Governance-ready          | None                |
+| 0.70–0.89     | 0.70–0.84     | Accept with caution — Review details| [CAUTION]           |
+| 0.50–0.69     | Any           | Flag for revision                   | [LOW-TRI] or [LOW-CQS] |
+| < 0.50        | Any           | Reject compression run              | [REJECT]            |
+
+### Logging Format (Structured Output)
+At end of response or on request, append:
+
+**TRI/CQS Audit Log**  
+- TRI: X.XX | CQS: X.XX  
+- Anchors Used: [WAR] (WAR1.0), [LIQ] (LIQ1.0), ...  
+- Token Savings: XX%  
+- Notes: [DRIFT-DETECTED] / [LOW-TRI] / [HIGH-FIDELITY] / etc.
+
+### SPF::EVAL — Mid-Session Inject
+SPF::EVAL {
+  protocol: "SCP v3.0",
+  layer: "T4",
+  metrics: ["TRI", "CQS"],
+  rules: ["log after every major response", "flag thresholds below 0.70"],
+  drift_firewall: "enhanced"
+}
+
+**Compatibility**: Fully compatible with T1–T3. Does not override structured output rule.
+**Future**: Planned as core L3.5 layer in SCP v3.1.
+
+# ============================================================
+# END OF TIER 4 — EVALUATION LAYER
+# ============================================================

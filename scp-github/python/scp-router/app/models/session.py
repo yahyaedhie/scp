@@ -16,6 +16,8 @@ class SessionState(BaseModel):
     tokens_output: int = 0
     tokens_saved: int = 0
     drift_events: list[dict] = []
+    tri: float = 1.0
+    cqs: float = 0.0
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     last_active: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
@@ -38,6 +40,8 @@ class ProxyResponse(BaseModel):
     tokens_saved_estimate: int
     drift_events: list[dict] = []
     active_codes: list[str] = []
+    tri: float = 1.0
+    cqs: float = 0.0
 
 
 class TokenReport(BaseModel):
@@ -49,3 +53,5 @@ class TokenReport(BaseModel):
     savings_percent: float
     active_codes: list[str]
     drift_events_count: int
+    tri: float = 1.0
+    cqs: float = 0.0

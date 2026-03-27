@@ -1,0 +1,32 @@
+{
+  "domain": "governance",
+  "anchors": [
+    {
+      "id": "AUDIT",
+      "shorthand": "[AUDIT]",
+      "expansion": "Compliance Audit Trail",
+      "definition": "A chronological record of actions and decisions for regulatory review.",
+      "constraints": ["record", "review", "compliance", "chronological"],
+      "hash": "g1",
+      "version": "3.0.2"
+    },
+    {
+      "id": "CHECK",
+      "shorthand": "[CHECK]",
+      "expansion": "Governance Checklist",
+      "definition": "A set of mandatory criteria that must be met before approval.",
+      "constraints": ["criteria", "mandatory", "approval", "checklist"],
+      "hash": "g2",
+      "version": "3.0.2"
+    },
+    {
+      "id": "COMP",
+      "shorthand": "[COMP]",
+      "expansion": "Regulatory Compliance Framework",
+      "definition": "The system of rules and standards governing operations in a specific sector.",
+      "constraints": ["framework", "rules", "standards", "regulatory"],
+      "hash": "g3",
+      "version": "3.0.2"
+    }
+  ]
+}

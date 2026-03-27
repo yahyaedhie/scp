@@ -1,0 +1,32 @@
+{
+  "domain": "education",
+  "anchors": [
+    {
+      "id": "QUIZ",
+      "shorthand": "[QUIZ]",
+      "expansion": "Concept Validation Quiz",
+      "definition": "A set of questions designed to test understanding of a specific topic.",
+      "constraints": ["question", "test", "validation", "score"],
+      "hash": "e1",
+      "version": "3.0.2"
+    },
+    {
+      "id": "FLASH",
+      "shorthand": "[FLASH]",
+      "expansion": "Spaced Repetition Flashcard",
+      "definition": "A concise fact or concept formatted for active recall and memory retention.",
+      "constraints": ["recall", "memory", "fact", "spaced-repetition"],
+      "hash": "e2",
+      "version": "3.0.2"
+    },
+    {
+      "id": "CURR",
+      "shorthand": "[CURR]",
+      "expansion": "Learning Curriculum",
+      "definition": "A structured path of lessons and materials to achieve a learning objective.",
+      "constraints": ["path", "lesson", "objective", "material"],
+      "hash": "e3",
+      "version": "3.0.2"
+    }
+  ]
+}
