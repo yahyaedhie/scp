@@ -1,3 +1,5 @@
+# python version 3.12.2
+
 --only-binary :platform_system!="Windows"  # For scikit-learn
 
 # Core Framework
