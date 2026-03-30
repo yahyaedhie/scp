@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCP Router | Professional Edition v3.2</title>
+    <title>SCP Router | Hardened v3.3</title>
     <!-- Fonts -->
     <link rel="stylesheet" href="index.css">
     <!-- Icons -->
@@ -17,13 +17,14 @@
                 <div class="logo-icon">
                     <i data-lucide="brain-circuit" color="white" size="20"></i>
                 </div>
-                <h2 class="font-heading" style="font-size: 1.2rem; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">SCP Router</h2>
+                <h2 class="font-heading" style="font-size: 1.2rem; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">SCP Router v3.3</h2>
             </div>
 
             <div style="margin-top: 10px;">
                 <label style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Current Domain</label>
                 <div style="margin-top: 5px;">
                     <select id="domainSelect" class="chat-select" style="width: 100%;">
+                        <option value="auto" selected>🛡️ Secure Auto-Detect (v3.3)</option>
                         <option value="finance">Finance Specialist</option>
                         <option value="governance">Governance Expert</option>
                         <option value="education">Educational Mentor</option>
@@ -58,6 +59,10 @@
                     </button>
                     <i data-lucide="shield-check" color="var(--accent-teal)" size="18"></i>
                     <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-bright);" id="sessionStatus">Secure Protocol Active</span>
+                    <span id="detectedDomainBadge" style="display: none; padding: 2px 8px; background: var(--primary-glow); border: 1px solid var(--primary); border-radius: 4px; font-size: 0.65rem; color: var(--text-bright); text-transform: uppercase;"></span>
+                    <button id="optimizeBtn" class="chat-btn primary" style="display: none; margin-left: auto; padding: 4px 12px; font-size: 0.7rem; gap: 6px;">
+                        <i data-lucide="sparkles" size="14"></i> Optimize
+                    </button>
                 </div>
 
                 <div class="config-group">
@@ -88,7 +93,7 @@
                 <!-- Welcome Message -->
                 <div class="msg-wrapper assistant">
                     <div class="bubble">
-                        <h3 style="margin-bottom: 10px;">Welcome to SCP v3.2</h3>
+                        <h3 style="margin-bottom: 10px;">Welcome to SCP v3.3 Hardened</h3>
                         <p>I am your Semantic Compression gateway. I prioritize high-fidelity meaning while optimizing for token efficiency.</p>
                         <div style="margin-top: 15px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; font-size: 0.85rem;">
                             <strong>Protocol Tips:</strong>
@@ -113,7 +118,7 @@
                     </button>
                 </div>
                 <p style="text-align: center; font-size: 0.7rem; color: var(--text-muted); margin-top: 10px;">
-                    Powered by Semantic Compression Protocol v3.2 — Personal Deployment
+                    Powered by Semantic Compression Protocol v3.3 — Hardened Deployment
                 </p>
             </div>
         </main>
@@ -156,6 +161,25 @@
                 <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 5px;">No significant semantic drift detected in latest exchange.</p>
             </div>
         </aside>
+    </div>
+
+    <!-- Optimization Modal -->
+    <div id="optimizeModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="modal-content glass" style="max-width: 400px; width: 90%; padding: 25px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg-card); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <h3 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px; font-size: 1.1rem; color: var(--text-bright);">
+                <i data-lucide="zap" color="var(--accent-teal)"></i> Optimize Experience
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+                The AI has detected a consistent high-fidelity context. Would you like to add these keywords to the permanent <b id="targetDomainName" style="color: var(--primary)"></b> seed?
+            </p>
+            <div id="keywordList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px;">
+                <!-- Keywords injected here -->
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="cancelOptimize" class="chat-btn" style="background: transparent; border: 1px solid var(--border); padding: 8px 15px;">Cancel</button>
+                <button id="confirmOptimize" class="chat-btn primary" style="padding: 8px 20px;">Commit Experience</button>
+            </div>
+        </div>
     </div>
 
     <!-- Initialization & Core Logic -->

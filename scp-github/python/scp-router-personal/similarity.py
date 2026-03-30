@@ -80,3 +80,34 @@ class SimilarityEngine:
             similarities.append(float(sim))
             
         return similarities
+
+class DomainClassifier:
+    def __init__(self, engine: Optional[SimilarityEngine] = None):
+        self.engine = engine or SimilarityEngine()
+        self.domains = {
+            "finance": "finance market liquidity risk premium asset capital funding trading economy debt interest bank investment stock portfolio",
+            "governance": "governance policy regulation compliance law authority mandate ethics legal contract audit regulatory oversight sovereign treaty jurisdiction",
+            "education": "education learning knowledge study research academic school teacher student curriculum mentor university teaching literacy pedagogy instruction",
+            "cosmology": "cosmology universe galaxy space physics quantum entropy star blackhole telescope astrophysics astronomy relativity spacetime matter expansion cosmic"
+        }
+
+    def predict(self, text: str) -> str:
+        """Predict the most likely domain for the given text"""
+        if not text or not text.strip():
+            return "finance" # Default to finance if empty
+            
+        categories = list(self.domains.keys())
+        seeds = list(self.domains.values())
+        
+        # Get similarities across all domain seeds
+        scores = self.engine.batch_similarity(text, seeds)
+        
+        # Find index of max score
+        max_idx = np.argmax(scores)
+        max_score = scores[max_idx]
+        
+        # Low confidence threshold
+        if max_score < 0.01:
+            return "finance"
+            
+        return categories[max_idx]

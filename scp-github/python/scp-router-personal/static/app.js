@@ -1,9 +1,9 @@
 /**
- * SCP Router Management - Core Logic v3.2
+ * SCP Router Management - Core Logic v3.3 Hardened
  */
 
 // Configuration
-const API_URL = 'http://localhost:8000';
+const API_URL = window.location.origin;
 let sessionId = null;
 let triSum = 0;
 let savingsSum = 0;
@@ -25,6 +25,13 @@ const avgTRISpan = document.getElementById('avgTRI');
 const avgSavingsSpan = document.getElementById('avgSavings');
 const sessionHistoryList = document.getElementById('sessionHistory');
 const activeAnchorsList = document.getElementById('activeAnchorsList');
+const detectedDomainBadge = document.getElementById('detectedDomainBadge');
+const optimizeBtn = document.getElementById('optimizeBtn');
+const optimizeModal = document.getElementById('optimizeModal');
+const keywordListDiv = document.getElementById('keywordList');
+const targetDomainNameSpan = document.getElementById('targetDomainName');
+const confirmOptimizeBtn = document.getElementById('confirmOptimize');
+const cancelOptimizeBtn = document.getElementById('cancelOptimize');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -112,8 +119,10 @@ function updateHistoryUI() {
 }
 
 // Anchor Management
-async function fetchAnchors() {
-    const domain = domainSelect.value;
+async function fetchAnchors(overrideDomain = null) {
+    const domain = overrideDomain || domainSelect.value;
+    if (domain === 'auto') return; // Wait for detection
+    
     try {
         const response = await fetch(`${API_URL}/v3/anchors?domain=${domain}`);
         const data = await response.json();
@@ -158,9 +167,12 @@ function addMessage(role, content, metrics = null) {
             <p>${escapeHtml(content).replace(/\n/g, '<br>')}</p>
             ${metricsHtml}
         </div>
-        <div class="msg-meta">
-            ${role === 'user' ? '<span>You</span>' : '<span>AI Assistant</span>'}
-            <span>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        <div class="msg-meta" style="display: flex; justify-content: space-between;">
+            <div>
+                ${role === 'user' ? '<span>You</span>' : '<span>AI Assistant</span>'}
+                <span>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            </div>
+            ${role === 'assistant' && metrics && metrics.detected_domain ? `<span style="font-size: 0.65rem; color: var(--accent-teal);">⚡ ${metrics.detected_domain.toUpperCase()}</span>` : ''}
         </div>
     `;
     
@@ -222,7 +234,24 @@ async function sendMessage() {
         document.getElementById(loadingId).remove();
         
         if (data.response) {
-            addMessage('assistant', data.response, data.metrics);
+            // Update AI badge
+            if (data.detected_domain && domainSelect.value === 'auto') {
+                detectedDomainBadge.textContent = `✨ ${data.detected_domain.toUpperCase()}`;
+                detectedDomainBadge.style.display = 'inline-block';
+                detectedDomainBadge.classList.add('pulse-animation');
+                setTimeout(() => detectedDomainBadge.classList.remove('pulse-animation'), 1000);
+                
+                // Update anchors if domain shifted
+                fetchAnchors(data.detected_domain);
+            }
+            
+            // Handle optimization readiness
+            if (data.optimization_ready) {
+                optimizeBtn.style.display = 'flex';
+                optimizeBtn.classList.add('glow-animation');
+            }
+
+            addMessage('assistant', data.response, { ...data.metrics, detected_domain: data.detected_domain });
         } else {
             addMessage('assistant', 'Gateway reported an error.');
         }
@@ -255,10 +284,59 @@ messageInput.addEventListener('input', function() {
 sendBtn.addEventListener('click', sendMessage);
 newSessionBtn.addEventListener('click', () => {
     chatMessages.innerHTML = '';
+    optimizeBtn.style.display = 'none';
     initSession();
 });
 
-domainSelect.addEventListener('change', fetchAnchors);
+// Optimization Flow
+optimizeBtn.addEventListener('click', async () => {
+    try {
+        const response = await fetch(`${API_URL}/v3/sessions/${sessionId}/readiness`);
+        const data = await response.json();
+        
+        if (data.ready) {
+            targetDomainNameSpan.textContent = data.domain.toUpperCase();
+            keywordListDiv.innerHTML = '';
+            data.suggested_keywords.forEach(word => {
+                const div = document.createElement('div');
+                div.className = 'keyword-pill';
+                div.style = 'padding: 5px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-teal); border-radius: 20px; font-size: 0.8rem; color: var(--text-bright); display: flex; align-items: center; gap: 5px;';
+                div.innerHTML = `<input type="checkbox" checked value="${word}"> ${word}`;
+                keywordListDiv.appendChild(div);
+            });
+            optimizeModal.style.display = 'flex';
+        }
+    } catch (e) {
+        console.error('Failed to fetch readiness info');
+    }
+});
+
+cancelOptimizeBtn.addEventListener('click', () => {
+    optimizeModal.style.display = 'none';
+});
+
+confirmOptimizeBtn.addEventListener('click', async () => {
+    const checked = Array.from(keywordListDiv.querySelectorAll('input:checked')).map(i => i.value);
+    
+    try {
+        const response = await fetch(`${API_URL}/v3/sessions/${sessionId}/optimize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ approved_keywords: checked })
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+            optimizeModal.style.display = 'none';
+            optimizeBtn.style.display = 'none';
+            addMessage('assistant', `✨ Optimization Complete: Global Experience updated with ${result.anchors.length} new semantic associations.`);
+        }
+    } catch (e) {
+        console.error('Optimization failed');
+    }
+});
+
+domainSelect.addEventListener('change', () => fetchAnchors());
 
 // Spinner CSS
 const style = document.createElement('style');
@@ -272,5 +350,20 @@ style.textContent = `
         animation: spin 1s linear infinite;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .pulse-animation {
+        animation: pulse 0.5s ease-in-out 2 alternate;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(1.1); opacity: 0.8; background: var(--primary); }
+    }
+    .glow-animation {
+        box-shadow: 0 0 15px var(--primary);
+        animation: glow 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+        from { box-shadow: 0 0 5px var(--primary); }
+        to { box-shadow: 0 0 20px var(--primary); border-color: var(--text-bright); }
+    }
 `;
 document.head.appendChild(style);

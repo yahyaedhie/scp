@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    VERSION = "3.3"
+    COMPANY_SECRET_SALT = os.getenv("COMPANY_SECRET_SALT", "a1b1d0af-96e1-4e80-91e9-d3074a9476fb")
+    
     # DeepSeek API
     DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")

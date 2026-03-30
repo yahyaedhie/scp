@@ -4,6 +4,7 @@ import hashlib
 from typing import Optional, Dict, List
 from contextlib import contextmanager
 import re
+from config import Config
 
 class AnchorStore:
     def __init__(self, db_path: str = "anchors.db"):
@@ -46,8 +47,9 @@ class AnchorStore:
             conn.close()
     
     def _compute_hash(self, code: str, definition: str, domain: str, version: str) -> str:
-        """Compute 8-character hash for anchor"""
-        content = f"{code}{definition}{domain}{version}"
+        """Compute salted 8-character hash for anchor (v3.3 Hardened)"""
+        salt = Config.COMPANY_SECRET_SALT
+        content = f"{salt}{code}{definition}{domain}{version}"
         full_hash = hashlib.sha256(content.encode()).hexdigest()
         return full_hash[:8]
     
