@@ -2,8 +2,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import uuid
+import time
 
 from config import Config
 from anchors import AnchorStore
@@ -11,41 +12,43 @@ from memory import SessionMemory
 from compression import CompressionEngine
 from drift import DriftFirewall
 from tri import TRICalculator
-from llm_gateway import LLMGateway  # Add this
+from llm_gateway import LLMGateway
+from similarity import SimilarityEngine
 
-app = FastAPI(title="SCP Router - Personal Edition", version="3.2")
+app = FastAPI(title="SCP Router - Professional Edition", version="3.2")
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Redirect root to chat
 @app.get("/")
 async def root():
     return RedirectResponse(url="/static/chat.html")
 
-# Initialize components
+# Initialize components with shared similarity engine
+similarity_engine = SimilarityEngine()
 anchor_store = AnchorStore(Config.ANCHOR_DB_PATH)
 session_memory = SessionMemory()
 compression_engine = CompressionEngine()
-drift_firewall = DriftFirewall(Config.DRIFT_THRESHOLD)
-tri_calculator = TRICalculator()
-llm_gateway = LLMGateway(Config)  # Add this
+drift_firewall = DriftFirewall(similarity_engine=similarity_engine)
+tri_calculator = TRICalculator(similarity_engine=similarity_engine)
+llm_gateway = LLMGateway(Config)
 
 class RouteRequest(BaseModel):
     session_id: Optional[str] = None
     message: str
     domain: str = "finance"
     compression: str = "moderate"
-    model: str = None  # Add model selection
-    show_stats: bool = False
+    model: Optional[str] = None
+    show_stats: bool = True
+    dry_run: bool = False  # New: Bypass LLM for testing
 
 class RouteResponse(BaseModel):
     session_id: str
     response: str
-    model: Optional[str] = None  # Return which model was used
+    model: Optional[str] = None
     metrics: Optional[dict] = None
 
-# Default anchors (same as before)
+# Default anchors
 DEFAULT_ANCHORS = {
     "[WAR]": {"code": "[WAR]", "expansion": "War/Geopolitical Risk Premium", 
               "definition": "Risk premium from geopolitical conflict, sanctions, military escalation"},
@@ -55,10 +58,21 @@ DEFAULT_ANCHORS = {
                 "definition": "Borrow low-yield currency, invest in high-yield asset; sensitive to volatility"}
 }
 
-# Initialize default anchors
-for code, anchor in DEFAULT_ANCHORS.items():
-    if not anchor_store.get(code):
-        anchor_store.create(code, anchor["expansion"], anchor["definition"], "finance")
+# Helpers
+def _get_domain_config(domain: str) -> Dict[str, float]:
+    return Config.DOMAIN_CONFIG.get(domain, Config.DOMAIN_CONFIG["default"])
+
+def _build_system_prompt(domain: str, anchors: Dict) -> str:
+    return f"""You are an AI assistant using SCP v3.2 (Semantic Compression Protocol).
+Domain: {domain}
+Active anchors: {', '.join(anchors.keys())}
+
+Guidelines:
+- Use anchors like [CODE] when referencing concepts
+- Provide concise, precise answers
+- Maintain semantic accuracy
+- If you detect drift, flag with [DRIFT-DETECTED]
+"""
 
 @app.get("/health")
 async def health():
@@ -71,7 +85,9 @@ async def create_session():
 
 @app.post("/v3/route", response_model=RouteResponse)
 async def route_message(request: RouteRequest):
-    # Get or create session
+    start_time = time.time()
+    
+    # Session Management
     if not request.session_id:
         session_id = session_memory.create()
     else:
@@ -79,7 +95,7 @@ async def route_message(request: RouteRequest):
         if not session_memory.get(session_id):
             session_id = session_memory.create()
     
-    # Load anchors
+    # Load domain-specific anchors
     anchors_dict = {}
     db_anchors = anchor_store.list_by_domain(request.domain)
     for a in db_anchors:
@@ -87,103 +103,89 @@ async def route_message(request: RouteRequest):
     if not anchors_dict:
         anchors_dict = DEFAULT_ANCHORS
     
-    # Detect codes
-    detected_codes = [code for code in anchors_dict.keys() if code in request.message]
-    
-    # Compress
+    # Compression phase
     compressed, compression_stats = compression_engine.compress(
         request.message, request.compression, anchors_dict
     )
     
-    # Build system prompt
-    system_prompt = f"""You are an AI assistant using SCP v3.2 (Semantic Compression Protocol).
-Domain: {request.domain}
-Active anchors: {', '.join(anchors_dict.keys())}
-
-Guidelines:
-- Use anchors like [CODE] when referencing concepts
-- Provide concise, precise answers
-- Maintain semantic accuracy
-- If you detect drift, flag with [DRIFT-DETECTED]
-"""
+    # Determine thresholds for this domain
+    domain_config = _get_domain_config(request.domain)
     
-    # Call LLM via gateway
-    try:
-        result = await llm_gateway.call(
-            system_prompt=system_prompt,
-            user_message=compressed,
-            model=request.model
-        )
-        assistant_response = result["response"]
-        model_used = result["model"]
-    except Exception as e:
-        return RouteResponse(
-            session_id=session_id,
-            response=f"Error: {str(e)}",
-            model=None,
-            metrics={"error": True}
-        )
+    # LLM Execution or Dry Run
+    if request.dry_run:
+        assistant_response = f"[DRY-RUN] Compressed Input: {compressed}"
+        model_used = "dry-run-mock"
+    else:
+        system_prompt = _build_system_prompt(request.domain, anchors_dict)
+        try:
+            result = await llm_gateway.call(
+                system_prompt=system_prompt,
+                user_message=compressed,
+                model=request.model
+            )
+            assistant_response = result["response"]
+            model_used = result["model"]
+        except Exception as e:
+            return RouteResponse(
+                session_id=session_id,
+                response=f"Logic Error: {str(e)}",
+                model=None,
+                metrics={"error": True}
+            )
     
-    # Drift check
-    drift_results = {}
-    for code in detected_codes:
-        anchor = anchors_dict.get(code)
-        if anchor:
-            passed, sim = drift_firewall.check(assistant_response, anchor["definition"])
-            drift_results[code] = {"passed": passed, "similarity": sim}
+    # Post-processing: Drift & TRI
+    detected_codes = [code for code in anchors_dict.keys() if code in request.message]
     
-    drift_passed = all(r["passed"] for r in drift_results.values()) if drift_results else True
+    # Drift check against domain threshold
+    active_anchors = [anchors_dict[code] for code in detected_codes if code in anchors_dict]
+    drift_results = drift_firewall.batch_check(
+        assistant_response, 
+        active_anchors, 
+        domain_thresholds={request.domain: domain_config}
+    )
     
-    # Calculate TRI
+    # TRI calculation
     tri = tri_calculator.calculate(request.message, assistant_response)
     
-    # Save turn
+    # Update Session Memory
     session_memory.add_turn(session_id, {
         "message": request.message[:200],
-        "compressed": compressed[:200],
         "response": assistant_response[:200],
         "model": model_used,
         "tri": tri,
-        "drift_passed": drift_passed
+        "latency_ms": int((time.time() - start_time) * 1000)
     })
     
-    # Build metrics
+    # Build final metrics
     metrics = {
         "compression_savings": compression_stats.get("savings", 0),
         "tri": tri,
-        "drift_passed": drift_passed,
-        "model_used": model_used
+        "tri_threshold": domain_config["tri"],
+        "drift_passed": all(r["passed"] for r in drift_results.values()) if drift_results else True,
+        "model_used": model_used,
+        "processing_time_ms": int((time.time() - start_time) * 1000)
     }
     
     if request.show_stats:
         metrics["drift_results"] = drift_results
-        metrics["compression_mode"] = compression_stats.get("mode")
         metrics["detected_codes"] = detected_codes
-        metrics["original_length"] = len(request.message.split())
-        metrics["compressed_length"] = len(compressed.split())
     
     return RouteResponse(
         session_id=session_id,
         response=assistant_response,
         model=model_used,
-        metrics=metrics if request.show_stats else None
+        metrics=metrics
     )
 
 @app.get("/v3/anchors")
-async def list_anchors(domain: str = None):
-    if domain:
-        anchors = anchor_store.list_by_domain(domain)
-    else:
-        anchors = anchor_store.list_by_domain("finance")
+async def list_anchors(domain: Optional[str] = None):
+    domain = domain or "finance"
+    anchors = anchor_store.list_by_domain(domain)
     return {"anchors": anchors}
 
 @app.post("/v3/anchors")
 async def create_anchor(
-    code: str, 
-    expansion: str, 
-    definition: str, 
-    domain: str,
-    keywords: str = ""
+    code: str, expansion: str, definition: str, domain: str, keywords: str = ""
 ):
     kw_list = [k.strip() for k in keywords.split(",") if k.strip()]
     anchor = anchor_store.create(code, expansion, definition, domain, keywords=kw_list)

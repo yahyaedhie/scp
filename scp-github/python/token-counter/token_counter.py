@@ -23,5 +23,22 @@ class TokenCounter:
 
 # Example usage
 token_counter = TokenCounter()
-text = "Hello, how are you?"
+text = "[WAR] affects markets significantly."
+text2 = ("The Semantic Compression Protocol solves meaning drift in long AI conversations by using anchors "
+         "to define concepts once and reference them efficiently throughout the session.")
+text3 = ("def check_drift(text: str, domain: str = \"market\") -> list[DriftEvent]: "
+         "events: list[DriftEvent] = [] "
+         "codes = await extract_codes(text) "
+         "for code in codes: "
+         "anchor = await resolve_code(code, domain) "
+         "if not anchor: "
+         "    events.append(DriftEvent(...))")
+
+text4 = ("[SCP] prevents drift by storing anchors once and referencing them.")
+
 print(f'Tokens in text: {token_counter.count_tokens(text)}')
+print(f'Tokens in text2: {token_counter.count_tokens(text2)}')
+print(text3)
+print(f'Tokens in text3: {token_counter.count_tokens(text3)}')
+print(f'Tokens in text4: {token_counter.count_tokens(text4)}')
+
