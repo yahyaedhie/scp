@@ -392,8 +392,7 @@ The path from personal productivity to planetary infrastructure was not planned.
 
 ## License
 
-Apache 2.0 — see [LICENSE](https://claude.ai/chat/LICENSE)
-
+Apache 2.0 — see [LICENSE]
 ---
 
 ## Author
@@ -404,8 +403,7 @@ Apache 2.0 — see [LICENSE](https://claude.ai/chat/LICENSE)
 
 ## Contributing
 
-SCP is an open protocol. Contributions welcome — see [CONTRIBUTING.md](https://claude.ai/chat/CONTRIBUTING.md)
-
+SCP is an open protocol. Contributions welcome — see [CONTRIBUTING.md]
 You can contribute: new domain packs, anchor definitions, reference implementations, test cases, documentation, and translations.
 
 ---
