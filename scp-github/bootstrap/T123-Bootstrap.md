@@ -1,3 +1,7 @@
+This is the single-file version that combines the entire locked bootstrap triad (T1 + T2 + T3).
+Entity can simply paste this as the system prompt (or first message) for immediate SCP activation in any LLM. No Router required for basic usage.
+
+```
 === SCP v3.1 MASTER BOOTSTRAP – domain:market ===
 === Paste this as system prompt once per new session ===
 
@@ -108,6 +112,8 @@ stb=MEDIUM
 rel=LIQ WAR
 
 === BOOTSTRAP COMPLETE ===
+```
+
 After pasting, the first response should contain: "SCP v3.1 ACTIVE"
 Then talk naturally or use shorthand like [WAR]+ [LIQ]- etc.
 SCP will handle resolution, compression, drift protection, and learning automatically.
