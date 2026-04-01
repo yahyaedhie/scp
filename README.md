@@ -330,10 +330,10 @@ scp/
 │       └── anchors/                    ← market anchor definitions
 │
 ├── bootstrap/
-│   ├── T1_system_prompt.txt            ← nano bootstrap (~180 tokens)
-│   ├── T2_anchor_pack_market.txt       ← anchor definitions (~420 tokens)
-│   ├── T3_spf_packets_market.txt       ← cross-model packets (~420 tokens)
-│   └── MASTER_bootstrap_market.txt     ← all tiers combined
+│   ├── T1-bootstrap.md                 ← nano bootstrap (~180 tokens)
+│   ├── T2-bootstrap.md                 ← anchor definitions (~420 tokens)
+│   ├── T3=bootstrap.md                 ← cross-model packets (~420 tokens)
+│   └── T123-Boostrap.md                ← all tiers combined
 │
 ├── benchmarks/
 │   ├── BENCHMARK.md                    ← benchmark methodology
