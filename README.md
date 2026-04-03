@@ -356,7 +356,7 @@ SCP works today as a behavioral protocol inside any LLM's context window.
 
 ### 1. Copy the bootstrap
 
-Paste the contents of `bootstrap/MASTER_bootstrap_market.txt` as your system prompt.
+Paste the contents of `bootstrap/T1-bootstrap.md` as your system prompt.
 
 ### 2. Talk normally
 
@@ -374,7 +374,7 @@ AI:    [WAR] elevation compresses [LIQ] → [CARRY] unwind risk ↑
 
 ### 3. Cross-model handoff
 
-Export `T3_spf_packets_market.txt` → paste into new model's system prompt → meaning preserved.
+Export `T3-bootstrap.md` → paste into new model's system prompt → meaning preserved.
 
 ---
 
